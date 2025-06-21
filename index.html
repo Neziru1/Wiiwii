@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stick Man Shooter - Custom Characters</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #222;
+            overflow: hidden;
+            touch-action: manipulation;
+            font-family: Arial, sans-serif;
+        }
+        
+        #gameContainer {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background: #87CEEB;
+            margin: 0 auto;
+            border: 4px solid #444;
+            width: 100%;
+            height: 360px;
+        }
+        
+        /* Custom character sprites - hidden by default */
+        .character {
+            display: none;
+            position: absolute;
+        }
+        
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #444;
+            color: white;
+        }
+        
+        #mobileControls {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: #333;
+        }
+        
+        .mobile-btn {
+            padding: 15px 25px;
+            font-size: 18px;
+            background: #555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 0 5px;
+            user-select: none;
+        }
+        
+        #playerHealth, #levelInfo {
+            height: 20px;
+            width: 100px;
+            background: #333;
+            border: 2px solid #000;
+            margin: 5px;
+        }
+        
+        #playerHealthBar, #enemiesLeftBar {
+            height: 100%;
+            width: 100%;
+            background: #0f0;
+        }
+        
+        .info-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-label {
+            margin: 0 5px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            width: 80%;
+            max-width: 400px;
+        }
+        
+        #gameOver button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        #levelComplete {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            width: 80%;
+            max-width: 400px;
+        }
+        
+        #levelComplete button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- Custom character sprites -->
+        <img id="playerSprite" class="character" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggZmlsbD0iIzAwMGFmZiIgZD0iTTI1IDVjLTExIDAtMjAgOS0yMCAyMHM5IDIwIDIwIDIwIDIwLTkgMjAtMjAtOS0yMC0yMC0yMHptLTUgMjVoLTJ2LTEwaDJ2MTB6bTQgMGgtMnYtMTBoMnYxMHoiLz48L3N2Zz4=" width="50" height="50">
+        <img id="enemySprite" class="character" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggZmlsbD0iI2ZmMDAwMCIgZD0iTTI1IDVjLTExIDAtMjAgOS0yMCAyMHM5IDIwIDIwIDIwIDIwLTkgMjAtMjAtOS0yMC0yMC0yMHptLTUgMjVoLTJ2LTEwaDJ2MTB6bTQgMGgtMnYtMTBoMnYxMHoiLz48L3N2Zz4=" width="50" height="50">
+        <img id="bossSprite" class="character" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MCA3MCI+PHBhdGggZmlsbD0iI2ZmMDAwMCIgZD0iTTM1IDVjLTE4IDAtMzUgMTctMzUgMzVzMTcgMzUgMzUgMzUgMzUtMTcgMzUtMzUtMTctMzUtMzUtMzV6bS03IDUwaC0ydi0xNWgydjE1em00IDBoLTJ2LTE1aDJ2MTV6Ii8+PC9zdmc+" width="70" height="70">
+        
+        <div id="controls">
+            <div class="info-container">
+                <span class="info-label">HEALTH:</span>
+                <div id="playerHealth">
+                    <div id="playerHealthBar"></div>
+                </div>
+            </div>
+            <div class="info-container">
+                <span class="info-label">LEVEL:</span>
+                <span id="levelNumber">1</span>
+            </div>
+            <div class="info-container">
+                <span class="info-label">ENEMIES:</span>
+                <div id="levelInfo">
+                    <div id="enemiesLeftBar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="480" height="360"></canvas>
+        
+        <div id="mobileControls">
+            <button class="mobile-btn" id="leftBtn">←</button>
+            <button class="mobile-btn" id="jumpBtn">↑</button>
+            <button class="mobile-btn" id="shootBtn">FIRE</button>
+            <button class="mobile-btn" id="rightBtn">→</button>
+        </div>
+        
+        <div id="gameOver">
+            <h2 id="gameOverText">Game Over</h2>
+            <button id="restartBtn">Play Again</button>
+        </div>
+        
+        <div id="levelComplete">
+            <h2 id="levelCompleteText">Level Complete!</h2>
+            <button id="nextLevelBtn">Next Level</button>
+        </div>
+    </div>
+    
+    <script>
+        // Game canvas setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        const game = {
+            player: { 
+                x: 100, y: 300, width: 50, height: 50, color: 'blue', 
+                health: 100, maxHealth: 100, speed: 4, isJumping: false, 
+                jumpPower: 0, facing: 'right', bullets: [], lastShot: 0, 
+                reloadTime: 400,
+                sprite: document.getElementById('playerSprite')
+            },
+            enemies: [],
+            bullets: [],
+            gravity: 0.5,
+            groundLevel: 300,
+            keys: {},
+            lastTime: 0,
+            gameActive: true,
+            currentLevel: 1,
+            enemiesToSpawn: 0,
+            enemiesDefeated: 0,
+            bossHealth: 0,
+            bossActive: false
+        };
+        
+        // Level configurations
+        const levels = {
+            1: { enemies: 1, boss: false, enemySpeed: 1.5, enemyReload: 1500 },
+            2: { enemies: 3, boss: false, enemySpeed: 1.8, enemyReload: 1300 },
+            3: { enemies: 5, boss: false, enemySpeed: 2.0, enemyReload: 1100 },
+            4: { enemies: 6, boss: false, enemySpeed: 2.2, enemyReload: 900 },
+            5: { enemies: 6, boss: true, enemySpeed: 2.5, enemyReload: 700 }
+        };
+        
+        // Control setup
+        document.addEventListener('keydown', (e) => {
+            game.keys[e.key] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            game.keys[e.key] = false;
+        });
+        
+        // Mobile controls
+        document.getElementById('leftBtn').addEventListener('touchstart', () => game.keys['ArrowLeft'] = true);
+        document.getElementById('leftBtn').addEventListener('touchend', () => game.keys['ArrowLeft'] = false);
+        
+        document.getElementById('rightBtn').addEventListener('touchstart', () => game.keys['ArrowRight'] = true);
+        document.getElementById('rightBtn').addEventListener('touchend', () => game.keys['ArrowRight'] = false);
+        
+        document.getElementById('jumpBtn').addEventListener('touchstart', () => {
+            if (!game.player.isJumping) {
+                game.player.isJumping = true;
+                game.player.jumpPower = -12;
+            }
+        });
+        
+        document.getElementById('shootBtn').addEventListener('touchstart', () => {
+            shoot(game.player);
+        });
+        
+        // Button events
+        document.getElementById('restartBtn').addEventListener('click', resetGame);
+        document.getElementById('nextLevelBtn').addEventListener('click', nextLevel);
+        
+        // Initialize game
+        initLevel(1);
+        
+        // Initialize level
+        function initLevel(level) {
+            game.currentLevel = level;
+            game.enemies = [];
+            game.bullets = [];
+            game.enemiesDefeated = 0;
+            game.bossActive = false;
+            
+            const levelConfig = levels[level];
+            game.enemiesToSpawn = levelConfig.enemies;
+            document.getElementById('levelNumber').textContent = level;
+            updateEnemiesLeft();
+            
+            // Reset player position
+            game.player.x = 100;
+            game.player.y = game.groundLevel;
+            game.player.health = game.player.maxHealth;
+            game.player.isJumping = false;
+            game.player.jumpPower = 0;
+            game.player.bullets = [];
+            
+            // Spawn initial enemies
+            for (let i = 0; i < Math.min(3, levelConfig.enemies); i++) {
+                spawnEnemy();
+            }
+            
+            // For level 5, spawn bosses after regular enemies
+            if (level === 5) {
+                game.bossHealth = 200;
+            }
+            
+            updateHealthBar();
+            game.gameActive = true;
+        }
+        
+        // Spawn a new enemy
+        function spawnEnemy() {
+            if (game.enemiesToSpawn <= 0) return;
+            
+            const levelConfig = levels[game.currentLevel];
+            const isBoss = (game.currentLevel === 5 && game.enemiesToSpawn <= 2);
+            
+            const enemy = {
+                x: Math.random() > 0.5 ? 100 : canvas.width - 100,
+                y: game.groundLevel,
+                width: isBoss ? 70 : 50,
+                height: isBoss ? 70 : 50,
+                color: isBoss ? '#800' : 'red',
+                health: isBoss ? 50 : 30,
+                maxHealth: isBoss ? 50 : 30,
+                speed: levelConfig.enemySpeed * (isBoss ? 1.2 : 1),
+                isJumping: false,
+                jumpPower: 0,
+                facing: Math.random() > 0.5 ? 'left' : 'right',
+                bullets: [],
+                lastShot: 0,
+                reloadTime: levelConfig.enemyReload * (isBoss ? 0.8 : 1),
+                isBoss: isBoss,
+                aiTimer: 0,
+                aiDirectionChange: Math.random() * 2000 + 1000,
+                sprite: isBoss ? document.getElementById('bossSprite') : document.getElementById('enemySprite')
+            };
+            
+            game.enemies.push(enemy);
+            game.enemiesToSpawn--;
+            updateEnemiesLeft();
+        }
+        
+        // Shoot function
+        function shoot(shooter) {
+            const now = Date.now();
+            
+            if (now - shooter.lastShot > shooter.reloadTime && game.gameActive) {
+                const bullet = {
+                    x: shooter.x + (shooter.facing === 'right' ? shooter.width/2 : -shooter.width/2),
+                    y: shooter.y - 15,
+                    direction: shooter.facing === 'right' ? 1 : -1,
+                    speed: shooter.isBoss ? 8 : 7,
+                    damage: shooter.isBoss ? 15 : 10,
+                    isPlayer: shooter === game.player,
+                    color: shooter === game.player ? '#00f' : shooter.isBoss ? '#f80' : '#f00'
+                };
+                
+                game.bullets.push(bullet);
+                shooter.lastShot = now;
+            }
+        }
+        
+        // Update health bar
+        function updateHealthBar() {
+            const percent = (game.player.health / game.player.maxHealth) * 100;
+            document.getElementById('playerHealthBar').style.width = percent + '%';
+            
+            // Change color based on health
+            document.getElementById('playerHealthBar').style.background = 
+                percent > 50 ? '#0f0' : percent > 20 ? '#ff0' : '#f00';
+        }
+        
+        // Update enemies left indicator
+        function updateEnemiesLeft() {
+            const totalEnemies = levels[game.currentLevel].enemies + (game.currentLevel === 5 ? 2 : 0);
+            const remaining = game.enemiesToSpawn + game.enemies.length;
+            const percent = (1 - (remaining / totalEnemies)) * 100;
+            
+            document.getElementById('enemiesLeftBar').style.width = percent + '%';
+            document.getElementById('enemiesLeftBar').style.background = 
+                percent > 80 ? '#0f0' : percent > 50 ? '#0af' : '#f00';
+        }
+        
+        // Check bullet hits
+        function checkHits() {
+            for (let i = game.bullets.length - 1; i >= 0; i--) {
+                const bullet = game.bullets[i];
+                
+                // Check if bullet hits player
+                if (bullet.isPlayer) {
+                    for (let j = game.enemies.length - 1; j >= 0; j--) {
+                        const enemy = game.enemies[j];
+                        if (Math.abs(bullet.x - enemy.x) < enemy.width/2 && 
+                            Math.abs(bullet.y - enemy.y) < enemy.height/2) {
+                            enemy.health -= bullet.damage;
+                            game.bullets.splice(i, 1);
+                            
+                            if (enemy.health <= 0) {
+                                if (enemy.isBoss) {
+                                    game.bossHealth -= 50;
+                                    if (game.bossHealth <= 0) {
+                                        game.enemies.splice(j, 1);
+                                        game.enemiesDefeated++;
+                                        updateEnemiesLeft();
+                                    } else {
+                                        enemy.health = enemy.maxHealth; // Reset health for next phase
+                                    }
+                                } else {
+                                    game.enemies.splice(j, 1);
+                                    game.enemiesDefeated++;
+                                    updateEnemiesLeft();
+                                }
+                                
+                                // Spawn new enemy if needed
+                                if (game.enemies.length < 3 && game.enemiesToSpawn > 0) {
+                                    spawnEnemy();
+                                }
+                            }
+                            break;
+                        }
+                    }
+                } 
+                // Check if bullet hits player
+                else if (Math.abs(bullet.x - game.player.x) < game.player.width/2 && 
+                         Math.abs(bullet.y - game.player.y) < game.player.height/2) {
+                    game.player.health -= bullet.damage;
+                    game.bullets.splice(i, 1);
+                    updateHealthBar();
+                    
+                    if (game.player.health <= 0) {
+                        game.player.health = 0;
+                        gameOver(false);
+                    }
+                }
+                // Remove bullets that go off screen
+                else if (bullet.x < 0 || bullet.x > canvas.width) {
+                    game.bullets.splice(i, 1);
+                }
+            }
+            
+            // Check level completion
+            if (game.enemies.length === 0 && game.enemiesToSpawn === 0 && 
+                (game.currentLevel !== 5 || game.bossHealth <= 0)) {
+                if (game.currentLevel < 5) {
+                    levelComplete();
+                } else {
+                    gameOver(true); // Final win
+                }
+            }
+        }
+        
+        // Game over
+        function gameOver(playerWon) {
+            game.gameActive = false;
+            document.getElementById('gameOverText').textContent = 
+                playerWon ? "YOU WIN THE GAME!" : "GAME OVER";
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        // Level complete
+        function levelComplete() {
+            game.gameActive = false;
+            document.getElementById('levelCompleteText').textContent = 
+                `Level ${game.currentLevel} Complete!`;
+            document.getElementById('levelComplete').style.display = 'block';
+        }
+        
+        // Next level
+        function nextLevel() {
+            document.getElementById('levelComplete').style.display = 'none';
+            initLevel(game.currentLevel + 1);
+        }
+        
+        // Reset game
+        function resetGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            initLevel(1);
+        }
+        
+        // Draw character with sprite
+        function drawCharacter(x, y, width, height, facing, sprite) {
+            ctx.save();
+            ctx.translate(x, y);
+            
+            // Flip if facing left
+            if (facing === 'left') {
+                ctx.scale(-1, 1);
+                ctx.drawImage(sprite, -width, -height, width, height);
+            } else {
+                ctx.drawImage(sprite, 0, -height, width, height);
+            }
+            
+            ctx.restore();
+        }
+        
+        // Draw bullets
+        function drawBullets() {
+            for (let bullet of game.bullets) {
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.isPlayer ? 4 : bullet.damage > 10 ? 5 : 4, 0, Math.PI * 2);
+                ctx.fillStyle = bullet.color;
+                ctx.fill();
+                
+                // Add trail effect for boss bullets
+                if (bullet.damage > 10) {
+                    ctx.beginPath();
+                    ctx.moveTo(bullet.x, bullet.y);
+                    ctx.lineTo(bullet.x - bullet.direction * 10, bullet.y);
+                    ctx.strokeStyle = '#f80';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // Update bullets
+        function updateBullets() {
+            for (let bullet of game.bullets) {
+                bullet.x += bullet.direction * bullet.speed;
+            }
+        }
+        
+        // AI behavior
+        function updateAI(timestamp) {
+            for (let enemy of game.enemies) {
+                // Change direction periodically
+                if (timestamp - enemy.aiTimer > enemy.aiDirectionChange) {
+                    enemy.facing = Math.random() < 0.5 ? 'left' : 'right';
+                    enemy.aiTimer = timestamp;
+                    enemy.aiDirectionChange = Math.random() * 2000 + 1000;
+                }
+                
+                // Move in facing direction
+                if (enemy.facing === 'left') {
+                    enemy.x -= enemy.speed;
+                } else {
+                    enemy.x += enemy.speed;
+                }
+                
+                // Boundary check
+                enemy.x = Math.max(enemy.width/2, Math.min(canvas.width - enemy.width/2, enemy.x));
+                
+                // Shoot if player is in line of sight
+                const inLineOfSight = 
+                    (enemy.facing === 'right' && game.player.x > enemy.x) || 
+                    (enemy.facing === 'left' && game.player.x < enemy.x);
+                
+                if (inLineOfSight && Math.random() < 0.02) {
+                    shoot(enemy);
+                }
+            }
+        }
+        
+        // Update jumping physics
+        function updatePhysics() {
+            // Player physics
+            if (game.player.isJumping) {
+                game.player.y += game.player.jumpPower;
+                game.player.jumpPower += game.gravity;
+                
+                if (game.player.y >= game.groundLevel) {
+                    game.player.y = game.groundLevel;
+                    game.player.isJumping = false;
+                    game.player.jumpPower = 0;
+                }
+            }
+            
+            // Enemy physics
+            for (let enemy of game.enemies) {
+                if (enemy.isJumping) {
+                    enemy.y += enemy.jumpPower;
+                    enemy.jumpPower += game.gravity;
+                    
+                    if (enemy.y >= game.groundLevel) {
+                        enemy.y = game.groundLevel;
+                        enemy.isJumping = false;
+                        enemy.jumpPower = 0;
+                    }
+                }
+                
+                // Random jumping
+                if (!enemy.isJumping && Math.random() < 0.005) {
+                    enemy.isJumping = true;
+                    enemy.jumpPower = enemy.isBoss ? -14 : -10;
+                }
+            }
+        }
+        
+        // Game loop
+        function gameLoop(timestamp) {
+            const deltaTime = timestamp - game.lastTime;
+            game.lastTime = timestamp;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw sky background
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#1E90FF');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw ground
+            ctx.fillStyle = '#5c3';
+            ctx.fillRect(0, game.groundLevel + 20, canvas.width, canvas.height - game.groundLevel - 20);
+            
+            // Update player (keyboard controls)
+            if (game.keys['ArrowLeft']) {
+                game.player.x -= game.player.speed;
+                game.player.facing = 'left';
+            }
+            if (game.keys['ArrowRight']) {
+                game.player.x += game.player.speed;
+                game.player.facing = 'right';
+            }
+            if (game.keys['ArrowUp'] && !game.player.isJumping) {
+                game.player.isJumping = true;
+                game.player.jumpPower = -12;
+            }
+            if (game.keys[' ']) { // Space to shoot
+                shoot(game.player);
+            }
+            
+            // Boundary check
+            game.player.x = Math.max(game.player.width/2, Math.min(canvas.width - game.player.width/2, game.player.x));
+            
+            // Update AI
+            if (game.gameActive) {
+                updateAI(timestamp);
+            }
+            
+            // Update physics
+            updatePhysics();
+            
+            // Update bullets
+            updateBullets();
+            checkHits();
+            
+            // Draw player
+            drawCharacter(
+                game.player.x, game.player.y,
+                game.player.width, game.player.height,
+                game.player.facing,
+                game.player.sprite
+            );
+            
+            // Draw enemies
+            for (let enemy of game.enemies) {
+                drawCharacter(
+                    enemy.x, enemy.y,
+                    enemy.width, enemy.height,
+                    enemy.facing,
+                    enemy.sprite
+                );
+                
+                // Draw enemy health bar
+                if (!enemy.isBoss) {
+                    const healthPercent = (enemy.health / enemy.maxHealth) * 100;
+                    ctx.fillStyle = healthPercent > 50 ? '#0f0' : healthPercent > 20 ? '#ff0' : '#f00';
+                    ctx.fillRect(enemy.x - enemy.width/2, enemy.y - enemy.height - 10, 
+                                enemy.width * (healthPercent / 100), 5);
+                    ctx.strokeStyle = '#000';
+                    ctx.strokeRect(enemy.x - enemy.width/2, enemy.y - enemy.height - 10, 
+                                 enemy.width, 5);
+                }
+            }
+            
+            // Draw boss health if this is level 5
+            if (game.currentLevel === 5 && game.bossHealth > 0) {
+                ctx.fillStyle = '#800';
+                ctx.fillRect(50, 20, (canvas.width - 100) * (game.bossHealth / 200), 15);
+                ctx.strokeStyle = '#000';
+                ctx.strokeRect(50, 20, canvas.width - 100, 15);
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.fillText('BOSS', canvas.width / 2 - 20, 32);
+            }
+            
+            // Draw bullets
+            drawBullets();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start the game when all images are loaded
+        window.onload = function() {
+            // Preload images
+            const imagesToLoad = [
+                game.player.sprite,
+                document.getElementById('enemySprite'),
+                document.getElementById('bossSprite')
+            ];
+            
+            let loadedCount = 0;
+            const totalImages = imagesToLoad.length;
+            
+            function imageLoaded() {
+                loadedCount++;
+                if (loadedCount === totalImages) {
+                    requestAnimationFrame(gameLoop);
+                }
+            }
+            
+            imagesToLoad.forEach(img => {
+                if (img.complete) {
+                    imageLoaded();
+                } else {
+                    img.onload = imageLoaded;
+                }
+            });
+        };
+    </script>
+</body>
+</html>
